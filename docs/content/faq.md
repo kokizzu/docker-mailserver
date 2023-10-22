@@ -21,9 +21,9 @@ Mails are stored in `/var/mail/${domain}/${username}`. Since `v9.0.0` it is poss
 Then, run the following commands:
 
 ``` BASH
-docker-compose pull
-docker-compose down
-docker-compose up -d
+docker compose pull
+docker compose down
+docker compose up -d
 ```
 
 You should see the new version number on startup, for example: `[   INF   ]  Welcome to docker-mailserver 11.3.1`. And you're done! Don't forget to have a look at the remaining functions of the `setup.sh` script with `./setup.sh help`.
@@ -97,7 +97,7 @@ DMS supports multiple domains out of the box, so you can do this:
 
 #### Bind mounts (default)
 
-From the location of your `docker-compose.yml`, create a compressed archive of your `docker-data/dms/config/` and `docker-data/dms/mail-*` folders:
+From the location of your `compose.yaml`, create a compressed archive of your `docker-data/dms/config/` and `docker-data/dms/mail-*` folders:
 
 ```bash
 tar --gzip -cf "backup-$(date +%F).tar.gz" ./docker-data/dms
@@ -143,7 +143,7 @@ imap port:          143 or 993 with STARTTLS/SSL (recommended)
 imap path prefix:   INBOX
 
 # SMTP
-smtp port:          25 or 587/465 with STARTTLS/SSL (recommended)
+smtp port:          587 or 465 with STARTTLS/SSL (recommended)
 username:           <user1@example.com>
 password:           <mypassword>
 ```
@@ -167,7 +167,7 @@ warning: do not list domain example.com in BOTH mydestination and virtual_mailbo
 
 Plus of course mail delivery fails.
 
-Also you need to define `hostname: example.com` in your `docker-compose.yml`.
+Also you need to define `hostname: example.com` in your `compose.yaml`.
 
 !!! tip "You might not want a bare domain"
 
@@ -175,7 +175,6 @@ Also you need to define `hostname: example.com` in your `docker-compose.yml`.
 
     - There are [benefits][github-comment-baredomain] to preferring a subdomain.
     - A bare domain is not required to have `user@example.com`, that is distinct from your hostname which is identified by a DNS MX record.
-
 
 ### How can I configure a catch-all?
 
@@ -250,22 +249,31 @@ See [#1247][github-issue-1247] for an example.
 
 ### Common Errors
 
+#### Creating an alias or account with an address for `hostname`
+
+Normally you will assign DMS a `hostname` such as `mail.example.com`. If you instead use a bare domain (_such as `example.com`_) or add an alias / account with the same value as your `hostname`, this can cause a conflict for mail addressed to `@hostname` as Postfix gets confused where to deliver the mail (_`hostname` is configured for only system accounts via the Postfix `main.cf` setting `mydestination`_).
+
+When this conflict is detected you'll find logs similar to this:
+
 ```log
-warning: connect to Milter service inet:localhost:8893: Connection refused
-# DMARC not running
-# => /etc/init.d/opendmarc restart
-
-warning: connect to Milter service inet:localhost:8891: Connection refused
-# DKIM not running
-# => /etc/init.d/opendkim restart
-
-mail amavis[1459]: (01459-01) (!)connect to /var/run/clamav/clamd.ctl failed, attempt #1: Can't connect to a UNIX socket /var/run/clamav/clamd.ctl: No such file or directory
-mail amavis[1459]: (01459-01) (!)ClamAV-clamd: All attempts (1) failed connecting to /var/run/clamav/clamd.ctl, retrying (2)
-mail amavis[1459]: (01459-01) (!)ClamAV-clamscan av-scanner FAILED: /usr/bin/clamscan KILLED, signal 9 (0009) at (eval 100) line 905.
-mail amavis[1459]: (01459-01) (!!)AV: ALL VIRUS SCANNERS FAILED
-# Clamav is not running (not started or because you don't have enough memory)
-# => check requirements and/or start Clamav
+warning: do not list domain mail.example.com in BOTH mydestination and virtual_mailbox_domains
+...
+NOQUEUE: reject: RCPT from HOST[IP]: 550 5.1.1 <RECIPIENT>: Recipient address rejected: User unknown in local recipient table; ...
 ```
+
+Opt-out of mail being directed to services by excluding `$myhostname` as a destination with a [`postfix-main.cf`][docs-override-postfix] override config:
+
+```cf
+mydestination = localhost.$mydomain, localhost
+```
+
+!!! tip
+
+    You may want to configure a `postmaster` alias via `setup alias add` to receive system notifications.
+
+!!! warning
+
+    Internal mail destined for `root`, `amavis` or other accounts will now no longer be received without an alias or account created for them.
 
 ### How to use DMS behind a proxy
 
@@ -281,7 +289,7 @@ Suppose you want to change a number of settings that are not listed as variables
 
 DMS has a built-in way to do post-install processes. If you place a script called **`user-patches.sh`** in the config directory it will be run after all configuration files are set up, but before the postfix, amavis and other daemons are started.
 
-It is common to use a local directory for config added to `docker-mailsever` via a volume mount in your `docker-compose.yml` (eg: `./docker-data/dms/config/:/tmp/docker-mailserver/`).
+It is common to use a local directory for config added to `docker-mailsever` via a volume mount in your `compose.yaml` (eg: `./docker-data/dms/config/:/tmp/docker-mailserver/`).
 
 Add or create the script file to your config directory:
 
@@ -376,7 +384,7 @@ Antispam rules are managed in `docker-data/dms/config/spamassassin-rules.cf`.
 
 For no subject set `SA_SPAM_SUBJECT=undef`.
 
-For a trailing white-space subject one can define the whole variable with quotes in `docker-compose.yml`:
+For a trailing white-space subject one can define the whole variable with quotes in `compose.yaml`:
 
 ```yaml
 environment:
@@ -411,7 +419,7 @@ The following configuration works nicely:
     Create a _system_ cron file:
 
     ```sh
-    # in the docker-compose.yml root directory
+    # in the compose.yaml root directory
     mkdir -p ./docker-data/dms/cron
     touch ./docker-data/dms/cron/sa-learn
     chown root:root ./docker-data/dms/cron/sa-learn
@@ -445,7 +453,7 @@ The following configuration works nicely:
     30 3 * * * root  sa-learn --ham /var/mail/not-example.com/*/cur* --dbpath /var/mail-state/lib-amavis/.spamassassin > /dev/null
     ```
 
-    Then with `docker-compose.yml`:
+    Then with `compose.yaml`:
 
     ```yaml
     services:
@@ -485,7 +493,7 @@ SA_TAG2=3.75
 SA_KILL=100000.0
 ```
 
-- The very negative vaue in `SA_TAG` makes sure, that all emails have the SpamAssassin headers included.
+- The very negative value in `SA_TAG` makes sure, that all emails have the SpamAssassin headers included.
 - `SA_TAG2` is the actual threshold to set the YES/NO flag for spam detection.
 - `SA_KILL` needs to be very high, to make sure nothing is bounced at all (`SA_KILL` superseeds `SPAMASSASSIN_SPAM_TO_INBOX`)
 
@@ -503,8 +511,9 @@ require ["comparator-i;ascii-numeric","relational","fileinto"];
 if header :contains "X-Spam-Flag" "YES" {
   fileinto "Junk";
 } elsif allof (
-   not header :matches "x-spam-score" "-*",
-   header :value "ge" :comparator "i;ascii-numeric" "x-spam-score" "3.75" ) {
+  not header :matches "x-spam-score" "-*",
+  header :value "ge" :comparator "i;ascii-numeric" "x-spam-score" "3.75"
+) {
   fileinto "Junk";
 }
 ```
@@ -521,6 +530,7 @@ $spam_quarantine_to       = "amavis\@example.com";
 
 [fail2ban-customize]: ./config/security/fail2ban.md
 [docs-maintenance]: ./config/advanced/maintenance/update-and-cleanup.md
+[docs-override-postfix]: ./config/advanced/override-defaults/postfix.md
 [docs-userpatches]: ./config/advanced/override-defaults/user-patches.md
 [github-comment-baredomain]: https://github.com/docker-mailserver/docker-mailserver/issues/3048#issuecomment-1432358353
 [github-comment-override-hostname]: https://github.com/docker-mailserver/docker-mailserver/issues/1731#issuecomment-753968425

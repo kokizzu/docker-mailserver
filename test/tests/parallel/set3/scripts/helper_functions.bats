@@ -4,6 +4,7 @@ BATS_TEST_NAME_PREFIX='[Scripts] (helper functions) '
 SOURCE_BASE_PATH="${REPOSITORY_ROOT:?Expected REPOSITORY_ROOT to be set}/target/scripts/helpers"
 
 @test '(network.sh) _sanitize_ipv4_to_subnet_cidr' {
+  # shellcheck source=../../../../../target/scripts/helpers/network.sh
   source "${SOURCE_BASE_PATH}/network.sh"
 
   run _sanitize_ipv4_to_subnet_cidr '255.255.255.255/0'
@@ -17,7 +18,9 @@ SOURCE_BASE_PATH="${REPOSITORY_ROOT:?Expected REPOSITORY_ROOT to be set}/target/
 }
 
 @test '(utils.sh) _env_var_expect_zero_or_one' {
+  # shellcheck source=../../../../../target/scripts/helpers/log.sh
   source "${SOURCE_BASE_PATH}/log.sh"
+  # shellcheck source=../../../../../target/scripts/helpers/utils.sh
   source "${SOURCE_BASE_PATH}/utils.sh"
 
   ZERO=0
@@ -32,7 +35,11 @@ SOURCE_BASE_PATH="${REPOSITORY_ROOT:?Expected REPOSITORY_ROOT to be set}/target/
 
   run _env_var_expect_zero_or_one TWO
   assert_failure
-  assert_output --partial "The value of 'TWO' is not zero or one ('2'), but was expected to be"
+  assert_output --partial "The value of 'TWO' (= '2') is not 0 or 1, but was expected to be"
+
+  run _env_var_expect_zero_or_one UNSET
+  assert_failure
+  assert_output --partial "'UNSET' is not set, but was expected to be"
 
   run _env_var_expect_zero_or_one
   assert_failure
@@ -40,7 +47,9 @@ SOURCE_BASE_PATH="${REPOSITORY_ROOT:?Expected REPOSITORY_ROOT to be set}/target/
 }
 
 @test '(utils.sh) _env_var_expect_integer' {
+  # shellcheck source=../../../../../target/scripts/helpers/log.sh
   source "${SOURCE_BASE_PATH}/log.sh"
+  # shellcheck source=../../../../../target/scripts/helpers/utils.sh
   source "${SOURCE_BASE_PATH}/utils.sh"
 
   INTEGER=1234

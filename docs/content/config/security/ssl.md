@@ -44,7 +44,7 @@ An [FQDN](https://en.wikipedia.org/wiki/Fully_qualified_domain_name) (_Fully Qua
     or
 
     ```yml
-    # docker-compose.yml
+    # compose.yaml
     services:
       mailserver:
         hostname: mail.example.com
@@ -72,7 +72,7 @@ You don't have to do anything else. Enjoy!
 
 !!! example
 
-    Add these additions to the `mailserver` service in your [`docker-compose.yml`][github-file-compose]:
+    Add these additions to the `mailserver` service in your [`compose.yaml`][github-file-compose]:
 
     ```yaml
     services:
@@ -103,7 +103,7 @@ Certbot provisions certificates to `/etc/letsencrypt`. Add a volume to store the
 
     !!! example
 
-        Add these additions to the `mailserver` service in your [`docker-compose.yml`][github-file-compose]:
+        Add these additions to the `mailserver` service in your [`compose.yaml`][github-file-compose]:
 
         ```yaml
         services:
@@ -161,9 +161,10 @@ Obtain a Cloudflare API token:
     dns_cloudflare_api_token = YOUR_CLOUDFLARE_TOKEN_HERE
     ```
 
-   - As this is sensitive data, you should restrict access to it with `chmod 600` and `chown 0:0`.
-   - Store the file in a folder if you like, such as `docker-data/certbot/secrets/`.
-5. Your `docker-compose.yml` should include the following:
+    - As this is sensitive data, you should restrict access to it with `chmod 600` and `chown 0:0`.
+    - Store the file in a folder if you like, such as `docker-data/certbot/secrets/`.
+
+5. Your `compose.yaml` should include the following:
 
     ```yaml
     services:
@@ -206,7 +207,7 @@ Obtain a Cloudflare API token:
 6. Run the service to provision a certificate:
 
     ```sh
-    docker-compose run certbot-cloudflare
+    docker compose run certbot-cloudflare
     ```
 
 7. You should see the following log output:
@@ -220,7 +221,7 @@ Obtain a Cloudflare API token:
     This certificate expires on YYYY-MM-DD.
     These files will be updated when the certificate renews.
     NEXT STEPS:
-    - The certificate will need to be renewed before it expires. Certbot can automatically renew the certificate in background, but you may need to take steps to enable that functionality. See https://certbot.org/renewal structions.
+    - The certificate will need to be renewed before it expires. Certbot can automatically renew the certificate in background, but you may need to take steps to enable that functionality. See https://certbot.org/renewal instructions.
     ```
 
 After completing the steps above, your certificate should be ready to use.
@@ -229,7 +230,7 @@ After completing the steps above, your certificate should be ready to use.
 
     We've only demonstrated how to provision a certificate, but it will expire in 90 days and need to be renewed before then.
 
-    In the following example, add a new service (`certbot-cloudflare-renew`) into `docker-compose.yml` that will handle certificate renewals:
+    In the following example, add a new service (`certbot-cloudflare-renew`) into `compose.yaml` that will handle certificate renewals:
 
     ```yml
     services:
@@ -247,7 +248,7 @@ After completing the steps above, your certificate should be ready to use.
     You can manually run this service to renew the cert within 90 days:
 
     ```sh
-    docker-compose run certbot-cloudflare-renew
+    docker compose run certbot-cloudflare-renew
     ```
 
     You should see the following output
@@ -273,7 +274,7 @@ After completing the steps above, your certificate should be ready to use.
     (`crontab` example: Checks every day if the certificate should be renewed)
 
     ```sh
-    0 0 * * * docker-compose -f PATH_TO_YOUR_DOCKER_COMPOSE_YML up certbot-cloudflare-renew
+    0 0 * * * docker compose -f PATH_TO_YOUR_DOCKER_COMPOSE_YML up certbot-cloudflare-renew
     ```
 
 #### Example using `nginx-proxy` and `acme-companion` with Docker { data-toc-label='nginx-proxy with Docker' }
@@ -327,7 +328,7 @@ In the following example, we show how DMS can be run alongside the docker contai
 
     You may want to add `--env LETSENCRYPT_TEST=true` to the above while testing, to avoid the _Let's Encrypt_ certificate generation rate limits.
 
-5. Make sure your mount path to the `letsencrypt` certificates directory is correct. Edit your `docker-compose.yml` for the `mailserver` service to have volumes added like below:
+5. Make sure your mount path to the `letsencrypt` certificates directory is correct. Edit your `compose.yaml` for the `mailserver` service to have volumes added like below:
 
     ```yaml
     volumes:
@@ -337,15 +338,15 @@ In the following example, we show how DMS can be run alongside the docker contai
       - ./docker-data/acme-companion/certs/:/etc/letsencrypt/live/:ro
     ```
 
-6. Then from the `docker-compose.yml` project directory, run: `docker-compose up -d mailserver`.
+6. Then from the `compose.yaml` project directory, run: `docker compose up -d mailserver`.
 
 #### Example using `nginx-proxy` and `acme-companion` with `docker-compose` { data-toc-label='nginx-proxy with docker-compose' }
 
 The following example is the [basic setup][acme-companion::basic-setup] you need for using `nginx-proxy` and `acme-companion` with DMS (_Referencing: [`acme-companion` documentation][acme-companion::docs]_):
 
-???+ example "Example: `docker-compose.yml`"
+???+ example "Example: `compose.yaml`"
 
-    You should have an existing `docker-compose.yml` with a `mailserver` service. Below are the modifications to add for integrating with `nginx-proxy` and `acme-companion` services:
+    You should have an existing `compose.yaml` with a `mailserver` service. Below are the modifications to add for integrating with `nginx-proxy` and `acme-companion` services:
 
     ```yaml
     services:
@@ -385,7 +386,7 @@ The following example is the [basic setup][acme-companion::basic-setup] you need
         container_name: nginx-proxy-acme
         restart: always
         environment:
-          # Only docker-compose v2 supports: `volumes_from: [nginx-proxy]`,
+          # When `volumes_from: [nginx-proxy]` is not supported,
           # reference the _reverse-proxy_ `container_name` here:
           - NGINX_PROXY_CONTAINER=nginx-proxy
         volumes:
@@ -463,7 +464,7 @@ Version 6.2 and later of the Synology NAS DSM OS now come with an interface to g
 
 Amongst other things, you can use these to secure your mail server. DSM locates the generated certificates in a folder below `/usr/syno/etc/certificate/_archive/`.
 
-Navigate to that folder and note the 6 character random folder name of the certificate you'd like to use. Then, add the following to your `docker-compose.yml` declaration file:
+Navigate to that folder and note the 6 character random folder name of the certificate you'd like to use. Then, add the following to your `compose.yaml` declaration file:
 
 ```yaml
 volumes:
@@ -594,7 +595,7 @@ This setup only comes with one caveat: The domain has to be configured on anothe
         container_name: mailserver
         hostname: mail.example.com
         volumes:
-           - ./docker-data/traefik/acme.json:/etc/letsencrypt/acme.json:ro
+          - ./docker-data/traefik/acme.json:/etc/letsencrypt/acme.json:ro
         environment:
           SSL_TYPE: letsencrypt
           SSL_DOMAIN: mail.example.com
@@ -605,26 +606,26 @@ This setup only comes with one caveat: The domain has to be configured on anothe
         image: docker.io/traefik:latest #v2.5
         container_name: docker-traefik
         ports:
-           - "80:80"
-           - "443:443"
+          - "80:80"
+          - "443:443"
         command:
-           - --providers.docker
-           - --entrypoints.http.address=:80
-           - --entrypoints.http.http.redirections.entryPoint.to=https
-           - --entrypoints.http.http.redirections.entryPoint.scheme=https
-           - --entrypoints.https.address=:443
-           - --entrypoints.https.http.tls.certResolver=letsencrypt
-           - --certificatesresolvers.letsencrypt.acme.email=admin@example.com
-           - --certificatesresolvers.letsencrypt.acme.storage=/acme.json
-           - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=http
+          - --providers.docker
+          - --entrypoints.http.address=:80
+          - --entrypoints.http.http.redirections.entryPoint.to=https
+          - --entrypoints.http.http.redirections.entryPoint.scheme=https
+          - --entrypoints.https.address=:443
+          - --entrypoints.https.http.tls.certResolver=letsencrypt
+          - --certificatesresolvers.letsencrypt.acme.email=admin@example.com
+          - --certificatesresolvers.letsencrypt.acme.storage=/acme.json
+          - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=http
         volumes:
-           - ./docker-data/traefik/acme.json:/acme.json
-           - /var/run/docker.sock:/var/run/docker.sock:ro
+          - ./docker-data/traefik/acme.json:/acme.json
+          - /var/run/docker.sock:/var/run/docker.sock:ro
 
       whoami:
         image: docker.io/traefik/whoami:latest
         labels:
-           - "traefik.http.routers.whoami.rule=Host(`mail.example.com`)"
+          - "traefik.http.routers.whoami.rule=Host(`mail.example.com`)"
     ```
 
 ### Self-Signed Certificates
@@ -689,7 +690,7 @@ docker run --rm -it \
 
 ### Bring Your Own Certificates
 
-You can also provide your own certificate files. Add these entries to your `docker-compose.yml`:
+You can also provide your own certificate files. Add these entries to your `compose.yaml`:
 
 ```yaml
 volumes:
@@ -835,7 +836,7 @@ You can of course run the script by cron once a week or something. In that way y
 ```sh
 # This script is run inside docker-mailserver via 'docker exec ...', using the 'mail' command to send alerts.
 ## code below will alert if certificate expires in less than two weeks
-## please adjust varables!
+## please adjust variables!
 ## make sure the 'mail -s' command works! Test!
 
 export SITE_URL="mail.example.com"
@@ -878,7 +879,7 @@ Despite this, if you must use non-standard DH parameters or you would like to sw
 [docs-optional-config]: ../advanced/optional-config.md
 [docs-faq-baredomain]: ../../faq.md#can-i-use-a-nakedbare-domain-ie-no-hostname
 
-[github-file-compose]: https://github.com/docker-mailserver/docker-mailserver/blob/master/docker-compose.yml
+[github-file-compose]: https://github.com/docker-mailserver/docker-mailserver/blob/master/compose.yaml
 [github-file::tls-readme]: https://github.com/docker-mailserver/docker-mailserver/blob/3b8059f2daca80d967635e04d8d81e9abb755a4d/test/test-files/ssl/example.test/README.md
 [hanscees-renewcerts]: https://github.com/hanscees/dockerscripts/blob/master/scripts/tomav-renew-certs
 

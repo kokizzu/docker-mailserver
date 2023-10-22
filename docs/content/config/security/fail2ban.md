@@ -16,7 +16,7 @@ hide:
 
 !!! warning
 
-    DMS must be launched with the `NET_ADMIN` capability in order to be able to install the NFTables rules that actually ban IP addresses. Thus, either include `--cap-add=NET_ADMIN` in the `docker run` command, or the equivalent in the `compose.yml`:
+    DMS must be launched with the `NET_ADMIN` capability in order to be able to install the NFTables rules that actually ban IP addresses. Thus, either include `--cap-add=NET_ADMIN` in the `docker run` command, or the equivalent in the `compose.yaml`:
 
     ```yaml
     cap_add:
@@ -29,7 +29,7 @@ hide:
 
 ### DMS Defaults
 
-DMS will automatically ban IP addresses of hosts that have generated 2 failed attempts over the course of the last week. The bans themselves last for one week.
+DMS will automatically ban IP addresses of hosts that have generated 6 failed attempts over the course of the last week. The bans themselves last for one week. The Postfix jail is configured to use `mode = extra` in DMS.
 
 ### Custom Files
 
@@ -39,14 +39,30 @@ This following configuration files inside the `docker-data/dms/config/` volume w
 
 1. `fail2ban-jail.cf` is copied to `/etc/fail2ban/jail.d/user-jail.local`
     - with this file, you can adjust the configuration of individual jails and their defaults
-    - the is an example provided [in our repository on GitHub][github-file-f2bjail]
+    - there is an example provided [in our repository on GitHub][github-file-f2bjail]
 2. `fail2ban-fail2ban.cf` is copied to `/etc/fail2ban/fail2ban.local`
     - with this file, you can adjust F2B behavior in general
-    - the is an example provided [in our repository on GitHub][github-file-f2bconfig]
+    - there is an example provided [in our repository on GitHub][github-file-f2bconfig]
 
 [docs-dms-config-volume]: ../../faq.md#what-about-the-docker-datadmsconfig-directory
 [github-file-f2bjail]: https://github.com/docker-mailserver/docker-mailserver/blob/master/config-examples/fail2ban-jail.cf
 [github-file-f2bconfig]: https://github.com/docker-mailserver/docker-mailserver/blob/master/config-examples/fail2ban-fail2ban.cf
+
+### Viewing All Bans
+
+When just running
+
+```bash
+setup fail2ban
+```
+
+the script will show all banned IP addresses.
+
+To get a more detailed `status` view, run
+
+```bash
+setup fail2ban status
+```
 
 ### Managing Bans
 
@@ -56,7 +72,11 @@ You can manage F2B with the `setup` script. The usage looks like this:
 docker exec <CONTAINER NAME> setup fail2ban [<ban|unban> <IP>]
 ```
 
-When just running `setup fail2ban`, the script will show all banned IP addresses.
+### Viewing the Log File
+
+```bash
+docker exec <CONTAINER NAME> setup fail2ban log
+```
 
 ## Running Inside A Rootless Container
 
@@ -92,7 +112,7 @@ It is necessary for F2B to have access to the real source IP addresses in order 
 
 === "Podman"
 
-    [Rootless Podman][rootless::podman] requires adding the value `slirp4netns:port_handler=slirp4netns` to the `--network` CLI option, or `network_mode` setting in your `compose.yml`:
+    [Rootless Podman][rootless::podman] requires adding the value `slirp4netns:port_handler=slirp4netns` to the `--network` CLI option, or `network_mode` setting in your `compose.yaml`:
 
     !!! example
 

@@ -1,6 +1,7 @@
 #!/bin/bash
 
-shopt -s globstar
+set -o pipefail
+shopt -s globstar inherit_errexit
 
 # ------------------------------------------------------------
 # ? >> Sourcing helpers & stacks
@@ -27,8 +28,7 @@ source /usr/local/bin/daemons-stack.sh
 # ? >> Registering functions
 # ------------------------------------------------------------
 
-function _register_functions
-{
+function _register_functions() {
   _log 'debug' 'Registering functions'
 
   # ? >> Checks
@@ -39,15 +39,17 @@ function _register_functions
 
   # ? >> Setup
 
+  _register_setup_function '_setup_vmail_id'
   _register_setup_function '_setup_logs_general'
   _register_setup_function '_setup_timezone'
 
-  if [[ ${SMTP_ONLY} -ne 1 ]]
-  then
+  if [[ ${SMTP_ONLY} -ne 1 ]]; then
     _register_setup_function '_setup_dovecot'
     _register_setup_function '_setup_dovecot_sieve'
     _register_setup_function '_setup_dovecot_dhparam'
     _register_setup_function '_setup_dovecot_quota'
+    _register_setup_function '_setup_spam_to_junk'
+    _register_setup_function '_setup_spam_mark_as_read'
   fi
 
   case "${ACCOUNT_PROVISIONER}" in
@@ -69,8 +71,7 @@ function _register_functions
       ;;
   esac
 
-  if [[ ${ENABLE_SASLAUTHD} -eq 1 ]]
-  then
+  if [[ ${ENABLE_SASLAUTHD} -eq 1 ]]; then
     _environment_variables_saslauthd
     _register_setup_function '_setup_saslauthd'
   fi
@@ -82,7 +83,6 @@ function _register_functions
   _register_setup_function '_setup_policyd_spf'
 
   _register_setup_function '_setup_security_stack'
-  _register_setup_function '_setup_spam_to_junk'
   _register_setup_function '_setup_rspamd'
 
   _register_setup_function '_setup_ssl'
@@ -97,8 +97,9 @@ function _register_functions
   # needs to come after _setup_postfix_early
   _register_setup_function '_setup_spoof_protection'
 
-  if [[ ${ENABLE_SRS} -eq 1  ]]
-  then
+  _register_setup_function '_setup_getmail'
+
+  if [[ ${ENABLE_SRS} -eq 1  ]]; then
     _register_setup_function '_setup_SRS'
     _register_start_daemon '_start_daemon_postsrsd'
   fi

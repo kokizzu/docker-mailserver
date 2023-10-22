@@ -39,14 +39,14 @@ In a nutshell, DMS provides you with the following components:
 - A MDA: [Dovecot](https://dovecot.org/)
 - A bunch of additional programs to improve security and emails processing
 
-Here's where DMS's toochain fits within the delivery chain:
+Here's where DMS's toolchain fits within the delivery chain:
 
 ```txt
                                     docker-mailserver is here:
-                                                         ┏━━━━━━━┓
-Sending an email:    MUA ---> MTA ---> (MTA relays) ---> ┫ MTA ╮ ┃
-Fetching an email:   MUA <------------------------------ ┫ MDA ╯ ┃
-                                                         ┗━━━━━━━┛
+                                                        ┏━━━━━━━┓
+Sending an email:   MUA ---> MTA ---> (MTA relays) ---> ┫ MTA ╮ ┃
+Fetching an email:  MUA <------------------------------ ┫ MDA ╯ ┃
+                                                        ┗━━━━━━━┛
 ```
 
 ??? example "An Example"
@@ -86,18 +86,18 @@ When it comes to the specifics of email exchange, we have to look at protocols a
 The following picture gives a visualization of the interplay of all components and their [respective ports][docs-understandports]:
 
 ```txt
- ┏━━━━━━━━━━ Submission ━━━━━━━━━━━━┓┏━━━━━━━━━━━━━ Transfer/Relay ━━━━━━━━━━━┓
+  ┏━━━━━━━━━━ Submission ━━━━━━━━━━━━━┓┏━━━━━━━━━━━━━ Transfer/Relay ━━━━━━━━━━━┓
 
-                           ┌─────────────────────┐                    ┌┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┐
-MUA ----- STARTTLS ------> ┤(587)   MTA ╮    (25)├ <-- cleartext ---> ┊ Third-party MTA ┊
-    ----- implicit TLS --> ┤(465)       │        |                    └┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┘
-    ----- cleartext -----> ┤(25)        │        |
-                           |┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄|
-MUA <---- STARTTLS ------- ┤(143)   MDA ╯        |
-    <---- implicit TLS --- ┤(993)                |
-                           └─────────────────────┘
+                            ┌─────────────────────┐                    ┌┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┐
+MUA ----- STARTTLS -------> ┤(587)   MTA ╮    (25)├ <-- cleartext ---> ┊ Third-party MTA ┊
+    ----- implicit TLS ---> ┤(465)       │        |                    └┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┘
+    ----- cleartext ------> ┤(25)        │        |
+                            |┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄|
+MUA <---- STARTTLS -------- ┤(143)   MDA ╯        |
+    <---- implicit TLS ---- ┤(993)                |
+                            └─────────────────────┘
 
- ┗━━━━━━━━━━ Retrieval ━━━━━━━━━━━━━┛
+  ┗━━━━━━━━━━ Retrieval ━━━━━━━━━━━━━━┛
 ```
 
 If you're new to email infrastructure, both that table and the schema may be confusing.
@@ -124,7 +124,7 @@ My MTA will thus have to support two kinds of Submission:
 - Inbound Submission (third-party email has been submitted & relayed, then is accepted "inside" by the MTA)
 
 ```txt
- ┏━━━━ Outbound Submission ━━━━┓
+  ┏━━━ Outbound Submission ━━━┓
 
                     ┌────────────────────┐                    ┌┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┐
 Me ---------------> ┤                    ├ -----------------> ┊                 ┊
@@ -132,7 +132,7 @@ Me ---------------> ┤                    ├ -----------------> ┊           
                     │                    ├ <----------------- ┊                 ┊
                     └────────────────────┘                    └┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┘
 
-                               ┗━━━━━━━━━━ Inbound Submission ━━━━━━━━━━┛
+                              ┗━━━━━━━━━━ Inbound Submission ━━━━━━━━━━┛
 ```
 
 #### Outbound Submission
@@ -168,7 +168,7 @@ Granted it's still very difficult enforcing encryption between MTAs (Transfer/Re
 Overall, DMS's default configuration for SMTP looks like this:
 
 ```txt
- ┏━━━━ Outbound Submission ━━━━┓
+  ┏━━━ Outbound Submission ━━━┓
 
                     ┌────────────────────┐                    ┌┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┐
 Me -- cleartext --> ┤(25)            (25)├ --- cleartext ---> ┊                 ┊
@@ -177,7 +177,7 @@ Me -- STARTTLS ---> ┤(587)               │                    ┊           
                     │                (25)├ <---cleartext ---- ┊                 ┊
                     └────────────────────┘                    └┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┘
 
-                               ┗━━━━━━━━━━ Inbound Submission ━━━━━━━━━━┛
+                              ┗━━━━━━━━━━ Inbound Submission ━━━━━━━━━━┛
 ```
 
 ### Retrieval - IMAP
@@ -204,14 +204,13 @@ The best practice as of 2020 would be [POP3S][wikipedia-pop3s] on port 995, rath
 
 As a _batteries included_ container image, DMS provides you with all the required components and a default configuration to run a decent and secure mail server. One may then customize all aspects of its internal components.
 
-- Simple customization is supported through [docker-compose configuration][github-file-compose] and the [env-mailserver][github-file-envmailserver] configuration file.
+- Simple customization is supported through [Docker Compose configuration][github-file-compose] and the [env-mailserver][github-file-envmailserver] configuration file.
 - Advanced customization is supported through providing "monkey-patching" configuration files and/or [deriving your own image][github-file-dockerfile] from DMS's upstream, for a complete control over how things run.
-
 
 Eventually, it is up to _you_ deciding exactly what kind of transportation/encryption to use and/or enforce, and to customize your instance accordingly (with looser or stricter security). Be also aware that protocols and ports on your server can only go so far with security; third-party MTAs might relay your emails on insecure connections, man-in-the-middle attacks might still prove effective, etc. Advanced counter-measure such as DANE, MTA-STS and/or full body encryption (eg. PGP) should be considered as well for increased confidentiality, but ideally without compromising backwards compatibility so as to not block emails.
 
 [docs-understandports]: ./config/security/understanding-the-ports.md
-[github-file-compose]: https://github.com/docker-mailserver/docker-mailserver/blob/master/docker-compose.yml
+[github-file-compose]: https://github.com/docker-mailserver/docker-mailserver/blob/master/compose.yaml
 [github-file-envmailserver]: https://github.com/docker-mailserver/docker-mailserver/blob/master/mailserver.env
 [github-file-dockerfile]: https://github.com/docker-mailserver/docker-mailserver/blob/master/Dockerfile
 [rfc-2487]: https://tools.ietf.org/html/rfc2487

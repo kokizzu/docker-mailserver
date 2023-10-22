@@ -10,7 +10,7 @@ title: Environment Variables
 
 ##### OVERRIDE_HOSTNAME
 
-If you can't set your hostname (_eg: you're in a container platform that doesn't let you_) specify it via this environment variable. It will have priority over `docker run --hostname`, or the equivalent `hostname:` field in `docker-compose.yml`.
+If you can't set your hostname (_eg: you're in a container platform that doesn't let you_) specify it via this environment variable. It will have priority over `docker run --hostname`, or the equivalent `hostname:` field in `compose.yaml`.
 
 - **empty** => Uses the `hostname -f` command to get canonical hostname for DMS to use.
 - => Specify an FQDN (fully-qualified domain name) to serve mail for. The hostname is required for DMS to function correctly.
@@ -33,6 +33,18 @@ Here you can adjust the [log-level for Supervisor](http://supervisord.org/loggin
 
 The log-level will show everything in its class and above.
 
+##### DMS_VMAIL_UID
+
+Default: 5000
+
+The User ID assigned to the static vmail user for `/var/mail` (_Mail storage managed by Dovecot_).
+
+##### DMS_VMAIL_GID
+
+Default: 5000
+
+The Group ID assigned to the static vmail group for `/var/mail` (_Mail storage managed by Dovecot_).
+
 ##### ONE_DIR
 
 - 0 => state in default directories.
@@ -49,7 +61,7 @@ User provisioning via OIDC is planned for the future, see [this tracking issue](
 - OIDC => use OIDC authentication (**not yet implemented**)
 - FILE => use local files (this is used as the default)
 
-A second container for the ldap service is necessary (e.g. [docker-openldap](https://github.com/osixia/docker-openldap))
+A second container for the ldap service is necessary (e.g. [`bitnami/openldap`](https://hub.docker.com/r/bitnami/openldap/)).
 
 ##### PERMIT_DOCKER
 
@@ -132,7 +144,7 @@ Enabled `policyd-spf` in Postfix's configuration. You will likely want to set th
 - **0** => fail2ban service disabled
 - 1 => Enables fail2ban service
 
-If you enable Fail2Ban, don't forget to add the following lines to your `docker-compose.yml`:
+If you enable Fail2Ban, don't forget to add the following lines to your `compose.yaml`:
 
 ``` BASH
 cap_add:
@@ -309,6 +321,18 @@ will be automatically moved to the Junk folder (with the help of a Sieve script)
 - 0 => Spam messages will be delivered in the mailbox.
 - **1** => Spam messages will be delivered in the `Junk` folder.
 
+##### MARK_SPAM_AS_READ
+
+Enable to treat received spam as "read" (_avoids notification to MUA client of new mail_).
+
+Mail is received as spam when it has been marked with either header:
+
+1. `X-Spam: Yes` (_by Rspamd_)
+2. `X-Spam-Flag: YES` (_by SpamAssassin - requires [`SPAMASSASSIN_SPAM_TO_INBOX=1`](#spamassassin_spam_to_inbox)_)
+
+- **0** => disabled
+- 1 => Spam messages will be marked as read
+
 #### Rspamd
 
 ##### ENABLE_RSPAMD
@@ -338,6 +362,15 @@ The purpose of this setting is to opt-out of starting an internal Redis instance
 - 0 => Disabled
 - 1 => Enabled
 
+##### RSPAMD_CHECK_AUTHENTICATED
+
+This settings controls whether checks should be performed on emails coming from authenticated users (i.e. most likely outgoing emails). The default value is `0` in order to align better with SpamAssassin. **We recommend** reading through [the Rspamd documentation on scanning outbound emails][rspamd-scanning-outbound] though to decide for yourself whether you need and want this feature.
+
+- **0** => No checks will be performed for authenticated users
+- 1 => All default checks will be performed for authenticated users
+
+[rspamd-scanning-outbound]: https://rspamd.com/doc/tutorials/scanning_outbound.html
+
 ##### RSPAMD_GREYLISTING
 
 Controls whether the [Rspamd Greylisting module][rspamd-greylisting-module] is enabled. This module can further assist in avoiding spam emails by [greylisting] e-mails with a certain spam score.
@@ -353,7 +386,9 @@ Controls whether the [Rspamd Greylisting module][rspamd-greylisting-module] is e
 When enabled,
 
 1. the "[autolearning][rspamd-autolearn]" feature is turned on;
-2. the Bayes classifier will be trained when moving mails from or to the Junk folder (with the help of Sieve scripts).
+2. the Bayes classifier will be trained (with the help of Sieve scripts) when moving mails
+    1. from anywhere to the `Junk` folder (learning this email as spam);
+    2. from the `Junk` folder into the `INBOX` (learning this email as ham).
 
 !!! warning "Attention"
 
@@ -368,7 +403,7 @@ When enabled,
 
 ##### RSPAMD_HFILTER
 
-Can be used to enable or disable the [Hfilter group module][rspamd-docs-hfilter-group-module]. This is used by DMS to adjust the `HFILTER_HOSTNAME_UNKNOWN` symbol, increasing it's default weight to act similar to Postfix's `reject_unknown_client_hostname`, without the need to outright reject a message.
+Can be used to enable or disable the [Hfilter group module][rspamd-docs-hfilter-group-module]. This is used by DMS to adjust the `HFILTER_HOSTNAME_UNKNOWN` symbol, increasing its default weight to act similar to Postfix's `reject_unknown_client_hostname`, without the need to outright reject a message.
 
 - 0 => Disabled
 - **1** => Enabled
@@ -458,7 +493,7 @@ Changes the interval in which log files are rotated.
 
     The entire log output for the container is still available via `docker logs mailserver` (or your respective container name). If you want to configure external log rotation for that container output as well, : [Docker Logging Drivers](https://docs.docker.com/config/containers/logging/configure/).
 
-    By default, the logs are lost when the container is destroyed (eg: re-creating via `docker-compose down && docker-compose up -d`). To keep the logs, mount a volume (to `/var/log/mail/`).
+    By default, the logs are lost when the container is destroyed (eg: re-creating via `docker compose down && docker compose up -d`). To keep the logs, mount a volume (to `/var/log/mail/`).
 
 !!! note
 
@@ -546,12 +581,22 @@ Note: activate this only if you are confident in your bayes database for identif
   **1** => `/etc/fetchmailrc` is split per poll entry. For every poll entry a separate fetchmail instance is started  to allow having multiple imap idle configurations defined.
 
 Note: The defaults of your fetchmailrc file need to be at the top of the file. Otherwise it won't be added correctly to all separate `fetchmail` instances.
+#### Getmail
+
+##### ENABLE_GETMAIL
+
+Enable or disable `getmail`.
+
+- **0** => Disabled
+- 1 => Enabled
+
+##### GETMAIL_POLL
+
+- **5** => `getmail` The number of minutes for the interval. Min: 1; Max: 30; Default: 5.
 
 #### LDAP
 
-##### ENABLE_LDAP
 
-Deprecated. See [`ACCOUNT_PROVISIONER`](#account_provisioner).
 
 ##### LDAP_START_TLS
 
@@ -561,8 +606,8 @@ Deprecated. See [`ACCOUNT_PROVISIONER`](#account_provisioner).
 ##### LDAP_SERVER_HOST
 
 - **empty** => mail.example.com
-- => Specify the dns-name/ip-address where the ldap-server is listening, or an URI like `ldaps://mail.example.com`
-- NOTE: If you going to use DMS in combination with `docker-compose.yml` you can set the service name here
+- => Specify the `<dns-name>` / `<ip-address>` where the LDAP server is reachable via a URI like: `ldaps://mail.example.com`.
+- Note: You must include the desired URI scheme (`ldap://`, `ldaps://`, `ldapi://`).
 
 ##### LDAP_SEARCH_BASE
 
@@ -631,14 +676,13 @@ The following variables overwrite the default values for ```/etc/dovecot/dovecot
 ##### DOVECOT_DNPASS
 
 - **empty** => same as `LDAP_BIND_PW`
-- => Password for LDAP dn sepecifified in `DOVECOT_DN`.
+- => Password for LDAP dn specified in `DOVECOT_DN`.
 
 ##### DOVECOT_URIS
 
 - **empty** => same as `LDAP_SERVER_HOST`
-- => Specify a space separated list of LDAP uris.
-- Note: If the protocol is missing, `ldap://` will be used.
-- Note: This deprecates `DOVECOT_HOSTS` (as it didn't allow to use LDAPS), which is currently still supported for backwards compatibility.
+- => Specify a space separated list of LDAP URIs.
+- Note: You must include the desired URI scheme (`ldap://`, `ldaps://`, `ldapi://`).
 
 ##### DOVECOT_LDAP_VERSION
 
@@ -731,7 +775,7 @@ Note: This postgrey setting needs `ENABLE_POSTGREY=1`
 ##### SASLAUTHD_LDAP_SERVER
 
 - **empty** => same as `LDAP_SERVER_HOST`
-- Note: since version 10.0.0, you can specify a protocol here (like ldaps://); this deprecates SASLAUTHD_LDAP_SSL.
+- Note: You must include the desired URI scheme (`ldap://`, `ldaps://`, `ldapi://`).
 
 ##### SASLAUTHD_LDAP_START_TLS
 

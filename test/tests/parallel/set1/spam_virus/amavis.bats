@@ -19,7 +19,7 @@ function setup_file() {
 
   CONTAINER_NAME=${CONTAINER2_NAME}
   _init_with_defaults
-   local CUSTOM_SETUP_ARGUMENTS=(
+  local CUSTOM_SETUP_ARGUMENTS=(
     --env ENABLE_AMAVIS=0
     --env ENABLE_SPAMASSASSIN=0
   )
@@ -61,18 +61,22 @@ function teardown_file() {
   export CONTAINER_NAME=${CONTAINER1_NAME}
 
   local AMAVIS_DEFAULTS_FILE='/etc/amavis/conf.d/20-debian_defaults'
+  # shellcheck disable=SC2016
   _run_in_container grep '\$sa_tag_level_deflt' "${AMAVIS_DEFAULTS_FILE}"
   assert_success
   assert_output --partial '= 2.0'
 
+  # shellcheck disable=SC2016
   _run_in_container grep '\$sa_tag2_level_deflt' "${AMAVIS_DEFAULTS_FILE}"
   assert_success
   assert_output --partial '= 6.31'
 
+  # shellcheck disable=SC2016
   _run_in_container grep '\$sa_kill_level_deflt' "${AMAVIS_DEFAULTS_FILE}"
   assert_success
   assert_output --partial '= 10.0'
 
+  # shellcheck disable=SC2016
   _run_in_container grep '\$sa_spam_subject_tag' "${AMAVIS_DEFAULTS_FILE}"
   assert_success
   assert_output --partial "= '***SPAM*** ';"
