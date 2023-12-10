@@ -78,9 +78,9 @@ Thanks goes to these wonderful people ✨
     </td>
     <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
         <a href=https://github.com/youtous>
-            <img src=https://avatars.githubusercontent.com/u/1868488?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Leo Journel/>
+            <img src=https://avatars.githubusercontent.com/u/1868488?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Leo/>
             <br />
-            <sub style="font-size:14px"><b>Leo Journel</b></sub>
+            <sub style="font-size:14px"><b>Leo</b></sub>
         </a>
     </td>
     <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
@@ -886,9 +886,9 @@ Thanks goes to these wonderful people ✨
 <tr>
     <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
         <a href=https://github.com/green-anger>
-            <img src=https://avatars.githubusercontent.com/u/7919497?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Andrey Likhodievskiy/>
+            <img src=https://avatars.githubusercontent.com/u/7919497?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Andrey L./>
             <br />
-            <sub style="font-size:14px"><b>Andrey Likhodievskiy</b></sub>
+            <sub style="font-size:14px"><b>Andrey L.</b></sub>
         </a>
     </td>
     <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
